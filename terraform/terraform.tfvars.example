@@ -1,0 +1,13 @@
+cloud_id           = "ab..z"
+folder_id          = "ab..z"
+image_id           = "ab..z"
+subnet_id          = "ab..z"
+network_id         = "ab..z"
+sub_net_id         = "ab..z"
+service_account_id = "ab..z"
+
+public_key_path          = "ab..z"
+private_key_path         = "ab..z"
+service_account_key_file = "ab..z"
+
+provision_enable = false
