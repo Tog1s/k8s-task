@@ -12,7 +12,7 @@ resource "yandex_kubernetes_cluster" "k8s-cluster" {
   network_id = var.network_id
 
   master {
-    version = "1.17"
+    version = var.k8s_version
     zonal {
       zone      = var.zone
       subnet_id = var.sub_net_id
@@ -29,8 +29,7 @@ resource "yandex_kubernetes_cluster" "k8s-cluster" {
   node_service_account_id = var.service_account_id
 
   labels = {
-    my_key       = "k8s-sa"
-    my_other_key = "k8s-sa"
+    key       = "k8s-sa"
   }
 
   release_channel         = "REGULAR"
@@ -40,10 +39,10 @@ resource "yandex_kubernetes_cluster" "k8s-cluster" {
 resource "yandex_kubernetes_node_group" "nodes" {
   cluster_id = yandex_kubernetes_cluster.k8s-cluster.id
   name       = "k8s-cluster-nodes"
-  version    = "1.17"
+  version    = var.k8s_version
 
   labels = {
-    "key" = "value"
+    "key" = "k8s-sa"
   }
 
   instance_template {
@@ -73,7 +72,7 @@ resource "yandex_kubernetes_node_group" "nodes" {
 
   allocation_policy {
     location {
-      zone = "ru-central1-a"
+      zone = var.zone
     }
   }
 }
