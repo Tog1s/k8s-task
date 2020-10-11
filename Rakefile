@@ -23,7 +23,7 @@ end
 
 desc 'install all charts'
 task :install_charts do
-  charts = %w(nginx-ingress mysql prometheus grafana telegraf)
+  charts = %w(nginx-ingress mysql prometheus grafana )
   charts.each do |chart|
     system "helm upgrade --install #{chart} ./charts/#{chart}"
   end

@@ -30,7 +30,7 @@ serviceAccounts:
 alertmanager:
   ## If false, alertmanager will not be installed
   ##
-  enabled: false
+  enabled: true
 
   ## Use a ClusterRole (and ClusterRoleBinding)
   ## - If set to false - we define a Role and RoleBinding in the defined namespaces ONLY
@@ -105,7 +105,7 @@ alertmanager:
   ingress:
     ## If true, alertmanager Ingress will be created
     ##
-    enabled: false
+    enabled: true
 
     ## alertmanager Ingress annotations
     ##
@@ -120,8 +120,8 @@ alertmanager:
     ## alertmanager Ingress hostnames with optional path
     ## Must be provided if Ingress is enabled
     ##
-    hosts: []
-    #   - alertmanager.domain.com
+    hosts:
+      - alertmanager
     #   - domain.com/alertmanager
 
     ## Extra paths to prepend to every host configuration. This is useful when working with annotation based services.
@@ -1150,21 +1150,17 @@ pushgateway:
 ## alertmanager ConfigMap entries
 ##
 alertmanagerFiles:
+
   alertmanager.yml:
-    global: {}
-      # slack_api_url: ''
-
-    receivers:
-      - name: default-receiver
-        # slack_configs:
-        #  - channel: '@you'
-        #    send_resolved: true
-
+    global:
+      slack_api_url: https://hooks.slack.com/
     route:
-      group_wait: 10s
-      group_interval: 5m
-      receiver: default-receiver
-      repeat_interval: 3h
+      receiver: slack-notifications
+    receivers:
+    - name: slack-notifications
+      slack_configs:
+      - channel: "#test"
+        send_resolved: true
 
 ## Prometheus server ConfigMap entries
 ##
@@ -1172,19 +1168,20 @@ serverFiles:
 
   ## Alerts configuration
   ## Ref: https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/
-  alerting_rules.yml: {}
-  # groups:
-  #   - name: Instances
-  #     rules:
-  #       - alert: InstanceDown
-  #         expr: up == 0
-  #         for: 5m
-  #         labels:
-  #           severity: page
-  #         annotations:
-  #           description: '{{ $labels.instance }} of job {{ $labels.job }} has been down for more than 5 minutes.'
-  #           summary: 'Instance {{ $labels.instance }} down'
-  ## DEPRECATED DEFAULT VALUE, unless explicitly naming your files, please use alerting_rules.yml
+
+  alerting_rules.yml:
+    groups:
+      - name: alert.rules
+        rules:
+        - alert: MySQLGlobalStatusSlowQueries
+          expr: increase(mysql_global_status_slow_queries[1m]) > 0
+          for: 1m
+          labels:
+            severity: page
+          annotations:
+            summary: "MySQL Slow Queries rule evaluation failures (app: {{ $labels.app }})"
+            description: "MySQL encountered SlowQueries: {{ $value }}.\n  VALUE = {{ $value }}\n  APP: {{ $labels.app }}"
+            
   alerts: {}
 
   ## Records configuration
@@ -1545,6 +1542,9 @@ serverFiles:
             target_label: kubernetes_pod_name
 
       - job_name: 'mysql-endpoints'
+        
+        scrape_interval: 5s
+        scrape_timeout: 5s
 
         kubernetes_sd_configs:
           - role: endpoints
@@ -1559,18 +1559,6 @@ serverFiles:
             target_label: kubernetes_namespace
           - source_labels: [__meta_kubernetes_service_name]
             target_label: kubernetes_name
-
-      - job_name: 'telegraf-endpoints'
-
-        kubernetes_sd_configs:
-          - role: endpoints
-
-        relabel_configs:
-          - action: labelmap
-            regex: __meta_kubernetes_service_label_(.+)
-          - source_labels: [__meta_kubernetes_service_label_app]
-            action: keep
-            regex: telegraf
 
 # adds additional scrape configs to prometheus.yml
 # must be a string so you have to add a | after extraScrapeConfigs:
